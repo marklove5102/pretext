@@ -161,7 +161,7 @@ slider.addEventListener('input', () => {
   setWidth(parseInt(slider.value))
 })
 
-const controlsEl = document.querySelector('.controls')!
+const controlsEl = document.querySelector<HTMLDivElement>('.controls')!
 controlsEl.addEventListener('mousemove', (e) => {
   animating = false
   const sliderRect = slider.getBoundingClientRect()

@@ -5,8 +5,9 @@ import { TEXTS, SIZES, WIDTHS } from './test-data.ts'
 // Headless test suite for the line breaking algorithm.
 //
 // Can't use canvas measureText in bun (no OffscreenCanvas), so we use HarfBuzz
-// for measurement instead. Same algorithm, same test data as the browser
-// accuracy page — just a different measurement backend.
+// for measurement instead. This is a simplified reimplementation of the core
+// algorithm using shared multilingual test data from test-data.ts, not a direct
+// invocation of the browser accuracy harness.
 //
 // Tests two things:
 //   1. Consistency: edge cases, monotonicity, determinism
@@ -302,10 +303,9 @@ describe('accuracy: word-sum vs full-line measurement', () => {
       if (mismatches.length > 20) console.log(`  ... and ${mismatches.length - 20} more`)
     }
 
-    // We expect very high accuracy — the punctuation merging fix
-    // should make word-sum match full-line in nearly all cases
-    // 98.4% — remaining mismatches are Arabic shaping context differences
-    // (word-by-word measurement loses cross-word shaping in mixed bidi text)
+    // The current HarfBuzz setup should match exactly. Keep the threshold loose
+    // enough that the test still communicates intent if the corpus or backend
+    // changes in the future.
     expect(matches / total).toBeGreaterThan(0.98)
   })
 })

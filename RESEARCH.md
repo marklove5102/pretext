@@ -256,7 +256,7 @@ Browser (canvas measureText, named fonts), 4 fonts × 8 sizes × 8 widths × 30 
   - Remaining: Thai dictionary divergence (3), Courier New Korean edge case (1)
 
 Headless (HarfBuzz, Arial Unicode):
-- 1472/1472 (100%) word-sum vs full-line measurement
+- 1920/1920 (100%) word-sum vs full-line measurement
 - Algorithm is exact; browser mismatches are measurement backend differences
 
 ## What Sebastian already knew

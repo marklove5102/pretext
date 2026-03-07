@@ -1,6 +1,6 @@
 # text-metrics
 
-DOM-free text measurement for the browser. Predicts text block heights without triggering layout reflow.
+Text measurement for the browser. Predicts text block heights without triggering layout reflow on the resize hot path.
 
 ## Problem
 
@@ -8,7 +8,7 @@ Measuring text in the browser requires DOM reads (`getBoundingClientRect`, `offs
 
 ## Solution
 
-Two-phase measurement using canvas `measureText()` (which bypasses the DOM layout engine entirely):
+Two-phase measurement centered around canvas `measureText()`:
 
 ```js
 import { prepare, layout } from './src/layout.ts'
@@ -20,7 +20,7 @@ const block = prepare(commentText, '16px Inter', 19)
 const { height, lineCount } = layout(block, containerWidth)
 ```
 
-`prepare()` segments text via `Intl.Segmenter`, measures each word via canvas, and caches the widths. `layout()` walks the cached widths to count lines — no canvas, no DOM, no string operations. Each `layout()` call is ~0.0002ms.
+`prepare()` segments text via `Intl.Segmenter`, measures each word via canvas, and caches the widths. On browsers that need emoji correction, it also does one cached DOM calibration read per font. `layout()` walks the cached widths to count lines — no canvas, no DOM, no string operations. Each `layout()` call is ~0.0002ms.
 
 ## Performance
 
@@ -36,14 +36,14 @@ const { height, lineCount } = layout(block, containerWidth)
 
 ## Accuracy
 
-Tested across 2 fonts × 8 sizes × 8 widths × 30 i18n texts (3840 tests):
+Tested across 4 fonts × 8 sizes × 8 widths × 30 i18n texts (7680 tests):
 
 | Browser | Match rate | Tests | Remaining mismatches |
 |---|---|---|---|
 | Chrome | 99.96% | 7680 | Georgia rounding (2), Courier New Korean (1) |
 | Safari | 99.92% | 7680 | Georgia rounding (2), bidi paren (1), Verdana/Courier New bidi (3) |
 | Firefox | 99.95% | 7680 | Thai dictionary (3), Courier New Korean (1) |
-| Headless (HarfBuzz) | 100% | 1472 | Algorithm is exact |
+| Headless (HarfBuzz) | 100% | 1920 | Algorithm is exact |
 
 Tested across 4 fonts (Helvetica Neue, Georgia, Verdana, Courier New) × 8 sizes × 8 widths × 30 i18n texts. Remaining mismatches are font-specific measurement edge cases at borderline widths and browser-internal dictionary differences (Thai). Safari's mismatches are CSS line-breaking behavior differences (not measurement errors). See [RESEARCH.md](RESEARCH.md) for details.
 
@@ -67,8 +67,8 @@ Tested across 4 fonts (Helvetica Neue, Georgia, Verdana, Courier New) × 8 sizes
 3. **CJK splitting + kinsoku**: CJK word segments are re-split into individual graphemes, since CSS allows line breaks between any CJK characters. Kinsoku shori rules keep CJK punctuation (，。「」 etc.) attached to their adjacent characters so they can't be separated across line breaks.
 4. **Measurement + caching**: each segment is measured via canvas `measureText()` and cached in a `Map<font, Map<segment, width>>`. Common words across texts share cache entries. The cache has no eviction — it grows monotonically per font string. For a typical single-font comment feed this is a few KB; `clearCache()` exists for manual eviction if needed.
 5. **Emoji correction**: canvas `measureText` inflates emoji widths on Chrome/Firefox at font sizes <24px on macOS. Auto-detected by measuring a reference emoji; correction subtracted per emoji grapheme. Constant across all emoji types and font families. Safari is unaffected (correction = 0).
-6. **Bidi classification**: characters are classified into bidi types, embedding levels are computed. Pure LTR text skips this entirely.
-7. **Layout** (per resize): walk the cached widths, accumulate per line, break when exceeding `maxWidth`. Trailing whitespace hangs past the edge (CSS behavior). Non-space overflow (words, emoji, punctuation) triggers a line break. Segments wider than `maxWidth` are broken at grapheme boundaries. Bidi reordering is applied per completed line.
+6. **Bidi classification**: characters are classified into bidi types and embedding levels are computed. Pure LTR text skips this entirely.
+7. **Layout** (per resize): walk the cached widths, accumulate per line, break when exceeding `maxWidth`. Trailing whitespace hangs past the edge (CSS behavior). Non-space overflow (words, emoji, punctuation) triggers a line break. Segments wider than `maxWidth` are broken at grapheme boundaries.
 
 ## Research
 
@@ -88,7 +88,8 @@ bun test         # headless accuracy tests (HarfBuzz)
 ```
 
 Pages:
-- `/` — visual demo (side-by-side with browser rendering)
-- `/accuracy` — sweep across fonts, sizes, widths, i18n texts
-- `/benchmark` — performance comparison
-- `/interleaving` — realistic DOM interleaving demo (TODO)
+- `/demo.html` — visual demo placeholder (`TODO`)
+- `/accuracy.html` — sweep across fonts, sizes, widths, i18n texts
+- `/benchmark.html` — performance comparison
+- `/bubbles.html` — bubble shrinkwrap demo
+- `/emoji-test.html` — canvas vs DOM emoji width sweep

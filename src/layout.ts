@@ -1,13 +1,14 @@
-// DOM-free text measurement for browser environments.
+// Text measurement for browser environments using canvas measureText.
 //
 // Problem: DOM-based text measurement (getBoundingClientRect, offsetHeight)
 // forces synchronous layout reflow. When components independently measure text,
 // each measurement triggers a reflow of the entire document. This creates
 // read/write interleaving that can cost 30ms+ per frame for 500 text blocks.
 //
-// Solution: two-phase measurement using canvas measureText (no DOM reads).
+// Solution: two-phase measurement centered around canvas measureText.
 //   prepare(text, font) — segments text via Intl.Segmenter, measures each word
-//     via canvas, caches widths. Call once when text first appears.
+//     via canvas, caches widths, and does one cached DOM calibration read per
+//     font when emoji correction is needed. Call once when text first appears.
 //   layout(prepared, maxWidth) — walks cached word widths with pure arithmetic
 //     to count lines and compute height. Call on every resize. ~0.0002ms per text.
 //
