@@ -1,24 +1,28 @@
 import { layoutNextLine, prepareWithSegments, type LayoutCursor, type PreparedTextWithSegments } from '../src/layout.ts'
 
-const BODY_FONT = '20px "Helvetica Neue", Helvetica, Arial, sans-serif'
-const BODY_LINE_HEIGHT = 31
-const MOBILE_BODY_FONT = '17px "Helvetica Neue", Helvetica, Arial, sans-serif'
-const MOBILE_BODY_LINE_HEIGHT = 27
+const BODY_FONT = '16px "Helvetica Neue", Helvetica, Arial, sans-serif'
+const BODY_LINE_HEIGHT = 25
+const MOBILE_BODY_FONT = '14.5px "Helvetica Neue", Helvetica, Arial, sans-serif'
+const MOBILE_BODY_LINE_HEIGHT = 22
 
 const LEFT_COPY = `
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc mollis, enim sed fermentum mattis, arcu felis dignissim neque, ut tincidunt neque ipsum in ligula. Sed viverra rutrum nunc, a tempor nulla feugiat at. Morbi placerat, nibh non volutpat feugiat, nibh mauris ultrices nibh, vitae feugiat dolor odio eget nisi.
+Some marks feel as if they were drawn to live in the margin. They do not interrupt the reading so much as redirect it, creating a second current alongside the text. What begins as a plain column turns into a route with memory: a turn inward here, a pocket of air there, a sentence held a little longer because the page suddenly narrows and asks for another rhythm.
 
-Praesent imperdiet justo vel mi cursus, nec pulvinar risus porttitor. Etiam pretium dictum dolor, vitae malesuada lorem convallis ut. Donec ornare diam at velit dictum, sed pharetra lorem pulvinar. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; In ac dui vel metus volutpat gravida.
+That is the appeal of contouring by hand. The layout is still disciplined, still typographic, but it stops pretending every paragraph must occupy the same indifferent rectangle. A logo, a silhouette, a small interruption in the field: these become reasons for the prose to bend and recover. The reader feels the shape without needing to think about geometry at all.
 `.trim().replace(/\s+/gu, ' ') + ' ' + `
-Sed non nibh ut ipsum tempor iaculis. Cras at mauris vitae lorem volutpat vulputate. Pellentesque ac dui at mauris luctus pretium. Mauris malesuada, mi vitae pretium efficitur, purus neque volutpat lectus, vel suscipit enim nulla a risus. Nulla facilisi. Duis elementum volutpat augue, vitae placerat enim faucibus vel.
+The result should not look fussy. Tiny jagged turns make the eye nervous, so the line wants broader gestures and longer sweeps, more dune than puzzle piece. The white space has to feel intentional. It should seem as if the copy always meant to pass beside the emblem, as if the emblem simply revealed a latent curve already present inside the paragraph.
+
+And when the window shifts, the arrangement should answer with another poised state, not a frantic animation. The shape stays itself; the text discovers another way around it. That is the kind of page we are after: calm, explicit, and fully owned in userland.
 `.trim().replace(/\s+/gu, ' ')
 
 const RIGHT_COPY = `
-Vestibulum faucibus posuere neque, eget accumsan eros malesuada ut. Integer non massa lacus. Donec non eros vel augue auctor suscipit. Aliquam aliquet purus vitae mauris luctus, sed egestas neque consequat. Curabitur commodo velit vitae mi placerat, quis gravida sem fermentum.
+A second column changes the feeling again. The eye can shuttle across the gutter, compare two contours, notice how one symbol opens upward while another settles into the lower edge of the page. The composition becomes less like a block of text and more like a spread: not decorative exactly, but arranged with enough confidence that reading and looking begin to support one another.
 
-Suspendisse luctus, mauris non gravida suscipit, justo felis rhoncus arcu, et luctus neque mi non lacus. Mauris sed semper felis. Nunc vulputate magna quis arcu interdum, quis placerat mauris ultrices. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
+This is also why the details matter. If the exclusion zone is too timid, the lines scrape the logo and the whole effect collapses. If the gap between columns is too generous, the page loses tension. If the body type is too large, the prose feels crowded before the contour has a chance to breathe. Small corrections change the page more than extra ornament ever could.
 `.trim().replace(/\s+/gu, ' ') + ' ' + `
-Fusce viverra magna vel nibh interdum, non rhoncus eros consequat. Maecenas sed justo neque. Donec ac nisl interdum, vulputate quam id, blandit massa. Quisque convallis dictum sem, in finibus dolor vestibulum et. Integer vulputate semper augue, sed ultrices nunc eleifend id.
+So this little exercise is deliberately spare: one headline, two symbols, two streams of text, and enough room for the layout algorithm to show its hand. No fake chrome, no surrounding explanation, no scrolling tricks to distract from the basic question. Can the page hold its shape? Can the prose wrap beautifully? Can the composition feel authored rather than merely computed?
+
+If the answer is yes, then the technical story starts to become a visual one. We stop talking only about line counts and benchmarks and begin talking about spreads, anchors, side notes, pull quotes, and pages that stay alive as the width changes. That is when the layout engine stops being a measurement trick and starts becoming a medium.
 `.trim().replace(/\s+/gu, ' ')
 
 type Rect = {
@@ -226,11 +230,11 @@ async function render(): Promise<void> {
 
   stage.style.minHeight = `${pageHeight}px`
 
-  const gutter = Math.round(Math.max(56, pageWidth * 0.055))
-  const centerGap = Math.round(Math.max(54, pageWidth * 0.058))
-  const headlineTop = Math.round(Math.max(48, pageHeight * 0.07))
+  const gutter = Math.round(Math.max(52, pageWidth * 0.048))
+  const centerGap = Math.round(Math.max(34, pageWidth * 0.038))
+  const headlineTop = Math.round(Math.max(42, pageHeight * 0.065))
   const headlineWidth = Math.round(Math.min(pageWidth - gutter * 2, pageWidth * 0.62))
-  const copyTop = headlineTop + Math.round(Math.max(174, pageWidth * 0.15))
+  const copyTop = headlineTop + Math.round(Math.max(142, pageWidth * 0.122))
   const columnWidth = Math.round((pageWidth - gutter * 2 - centerGap) / 2)
   const columnHeight = pageHeight - copyTop - gutter
 
@@ -248,18 +252,18 @@ async function render(): Promise<void> {
     height: columnHeight,
   }
 
-  const openaiSize = Math.round(Math.max(260, Math.min(420, pageWidth * 0.28)))
+  const openaiSize = Math.round(Math.max(260, Math.min(390, pageWidth * 0.25)))
   const openaiRect: Rect = {
-    x: leftRegion.x - Math.round(openaiSize * 0.16),
-    y: pageHeight - gutter - openaiSize + Math.round(openaiSize * 0.02),
+    x: leftRegion.x - Math.round(openaiSize * 0.06),
+    y: pageHeight - gutter - openaiSize + Math.round(openaiSize * 0.03),
     width: openaiSize,
     height: openaiSize,
   }
 
-  const claudeSize = Math.round(Math.max(250, Math.min(380, pageWidth * 0.25)))
+  const claudeSize = Math.round(Math.max(220, Math.min(340, pageWidth * 0.21)))
   const claudeRect: Rect = {
-    x: rightRegion.x + rightRegion.width - Math.round(claudeSize * 0.74),
-    y: Math.round(Math.max(56, headlineTop + 4)),
+    x: rightRegion.x + rightRegion.width - Math.round(claudeSize * 0.61),
+    y: Math.round(Math.max(36, headlineTop - 4)),
     width: claudeSize,
     height: claudeSize,
   }
@@ -292,7 +296,7 @@ async function render(): Promise<void> {
     lineHeight,
     openaiRect,
     openaiMask,
-    { horizontal: Math.round(lineHeight * 0.75), vertical: Math.round(lineHeight * 0.3) },
+    { horizontal: Math.round(lineHeight * 1.15), vertical: Math.round(lineHeight * 0.45) },
     'line line--left',
     'left',
   )
@@ -304,7 +308,7 @@ async function render(): Promise<void> {
     lineHeight,
     claudeRect,
     claudeMask,
-    { horizontal: Math.round(lineHeight * 0.68), vertical: Math.round(lineHeight * 0.28) },
+    { horizontal: Math.round(lineHeight * 1.05), vertical: Math.round(lineHeight * 0.42) },
     'line line--right',
     'right',
   )
