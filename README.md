@@ -85,30 +85,3 @@ Tested across 4 fonts (Helvetica Neue, Georgia, Verdana, Courier New) × 8 sizes
 ## Research
 
 See [RESEARCH.md](RESEARCH.md) for the full exploration log: every approach we tried, benchmarks, the system-ui font discovery, punctuation accumulation error analysis, emoji width tables, HarfBuzz RTL bug, server-side engine comparison, and what Sebastian already knew.
-
-## Credits
-
-Based on [Sebastian Markbage's text-layout](https://github.com/chenglou/text-layout) research prototype (2016). Sebastian's design — canvas `measureText` for shaping, bidi algorithm from pdf.js, streaming line breaking — informed the architecture. We added: two-phase caching (making resize O(n) arithmetic), `Intl.Segmenter` (replacing the `linebreak` npm dependency and non-standard `Intl.v8BreakIterator`), punctuation merging, CJK grapheme splitting, overflow-wrap support, and trailing whitespace handling.
-
-## Development
-
-```bash
-bun install
-bun start        # http://localhost:3000 — demo pages with full code reload (clears stale :3000 listeners first)
-bun run check    # typecheck + lint
-bun test         # lightweight invariants against the shipped implementation
-bun run accuracy-check         # Chrome browser sweep
-bun run accuracy-check:safari  # Safari browser sweep
-bun run accuracy-check:firefox # Firefox browser sweep
-bun run benchmark-check        # Chrome benchmark snapshot (short corpus + long-form corpora)
-bun run corpus-font-matrix --id=ar-risalat-al-ghufran-part-1 --samples=5  # sampled cross-font corpus check
-```
-
-Pages:
-- `/demo.html` — manual line-placement demo streamed from repeated `layoutNextLine()` calls
-- `/dynamic-layout.html` — fixed-height editorial spread with a continuous two-column flow, obstacle-aware title routing, and live logo-driven reflow
-- `/accuracy.html` — sweep across fonts, sizes, widths, i18n texts
-- `/benchmark.html` — performance comparison
-- `/bubbles.html` — bubble shrinkwrap demo
-- `/emoji-test.html` — canvas vs DOM emoji width sweep
-- `/corpus.html` — long-form corpora + diagnostics (`font=` / `lineHeight=` query params supported)

@@ -4,24 +4,37 @@ Pure JavaScript/TypeScript library for text measurement & layout. Fast, accurate
 
 Pretext completely side-steps the need for DOM measurements (e.g. `getBoundingClientRect`, `offsetHeight`), which trigger layout reflow, one of the most expensive operations in the browser. See demos for layout out The Great Gatsby & other international books at >1000fps.
 
-We're using AI to reimplement a subset of the font stack in userland, with the ground truth verifier that is browser rendering!
+We're using AI to reimplement a subset of the font stack in userland, with the ground truth verifier that is browser rendering! If you're a text expert, please advise!
+
+## Installation
+
+tbd. Clone this repo and `bun install` for now
 
 ## API
 
-You can use Pretext in two distinct ways.
+Pretext caters to 2 use-cases:
 
-The first use case is dead simple: you still render the text with regular DOM, and Pretext just tells you how tall that block will be at a given width. This is for feeds, cards, comments, chat, masonry, virtualization, all the normal app stuff.
+### 1. Measure a paragraph's height _without ever touching DOM_
 
 ```ts
 import { prepare, layout } from './src/layout.ts'
 
-const prepared = prepare(commentText, '16px Inter')
-const { height, lineCount } = layout(prepared, containerWidth, 20)
-
-// Then render with normal DOM. No line placement needed.
+// >>> describe what prepare does
+const prepared = prepare(commentText, '16px Inter') // >>> replace commentText with a good example,
+const { height, lineCount } = layout(prepared, textWidth, 20) // pure arithmetics. No DOM layout & reflow!
 ```
 
-The second use case is the fun one: you want to lay out the lines yourself. Not just style a paragraph, but actually decide where each line goes. Wrap around a logo. Split across synced panes. Flow into columns. That path uses the richer APIs:
+`prepare()` is a one-time analysis pass. Our benchmark pages show it takes ~0.03ms for 500 texts on M2 Pro. >>> check whether this number's true
+`layout()` should be called every time your `textWidth` changes. ~0.1ms for 500 texts
+
+This supports all the languages you can imagine, including emojis and mixed-bidi, and caters to specific browser quirks
+
+The returned height is the crucial last piece for unlocking web UI's:
+- proper virtualization/occlusion without guesstimates & caching
+- fancy userland layouts: masonry, JS-driven flexbox-like implementations, nudging a few layout values without CSS hacks (imagine that), etc.
+- _development time_ verification (especially now with AI) that labels on e.g. buttons don't overflow to the next line
+
+### 2. Lay out the paragraph lines manually yourself
 
 ```ts
 import {
@@ -33,10 +46,11 @@ import {
 
 const prepared = prepareWithSegments(storyText, '18px "Helvetica Neue"')
 
-// Fixed-width manual layout, no string materialization:
+// >>> Fixed-width manual layout, no string materialization (this comment's bad. Follow our tone guideline and fix this. See ../vibescript/agents.md for tone)
 walkLineRanges(prepared, 320, line => {
   console.log(line.width, line.start, line.end)
 })
+// >>> is this walkLineRanges example related to below or not...? what does it do here
 
 // Variable-width manual layout, one row at a time:
 let cursor = { segmentIndex: 0, graphemeIndex: 0 }
@@ -45,55 +59,54 @@ while (true) {
   if (line === null) break
   placeLineManually(line)
   cursor = line.end
+  // >>> when you see this, please discuss: I know We said no iterators, but this just feels like a worse iterator. Either we do iterator, or we should try another API format. I would like to brainstorm on the latter
 }
 ```
 
-## What makes this different
+This usage allows:
+- even fancier layout possibilities. See the [Dynamic Layout](/pages/dynamic-layout.html) demo.
+- rendering to canvas, SVG, WebGL and (eventually) server-side
 
-- It is fast on the resize hot path.
-- It is based on the browser's own shaping engine (`measureText`), so Arabic, Thai, CJK, emoji, bidi, etc. are not bolted on afterward.
-- It lets us keep layout in userland instead of begging CSS for ever more one-off layout APIs.
+## Caveats
 
-That last part is the real point.
-
-Most UI systems today are stuck between:
-- a boring paragraph that the browser owns
-- or a GPU-heavy landing page that barely has text
-
-Pretext is trying to open up the space in between: text-heavy, expressive, interactive layouts that are still maintainable and still fast.
-
-## Current shape of the project
-
-- `layout()` is the low-friction production API for "just tell me the height."
-- `prepareWithSegments()` + the richer layout helpers are the manual-layout path.
-- `layoutWithLines()` gives you all the lines at once.
-- `layoutNextLine()` is for variable-width / contour-like layouts where the width changes from row to row.
-- `walkLineRanges()` is the lower-allocation batch geometry pass when you want widths/cursors but not strings.
-
-## Current demos
-
-- Great Gatsby canary
-- international book corpora
-- bubble shrinkwrap
-- synced multi-view text panes
-- contour and editorial layouts
-- logo / poster experiments
-
-## Honesty section
-
-Pretext is not pretending to be a full browser layout engine.
-
-It currently targets the common app-text setup:
+Pretext doesn't try to be a full font rendering engine (yet?). It currently targets the common text setup:
 - `white-space: normal`
 - `word-break: normal`
 - `overflow-wrap: break-word`
-- explicit caller-provided `line-height`
+- explicit caller-provided `line-height` >>> provided where?
 
-If you want full browser-accurate paragraph spacing, arbitrary CSS line-height resolution, ruby, vertical text, every writing mode, every shape-outside quirk, etc., that's a different problem.
+>>> something about system-ui maybe.
 
-But if what you want is:
-- very fast height prediction
-- strong cross-language wrapping
-- and a route to manual, userland-controlled text layout
+## Develop
 
-that is exactly what this repo is for.
+>>> is this section stale?
+
+```bash
+bun install
+bun start        # http://localhost:3000 — demo pages with full code reload (clears stale :3000 listeners first)
+bun run check    # typecheck + lint
+bun test         # lightweight invariants against the shipped implementation
+bun run accuracy-check         # Chrome browser sweep
+bun run accuracy-check:safari  # Safari browser sweep
+bun run accuracy-check:firefox # Firefox browser sweep
+bun run benchmark-check        # Chrome benchmark snapshot (short corpus + long-form corpora)
+bun run corpus-font-matrix --id=ar-risalat-al-ghufran-part-1 --samples=5  # sampled cross-font corpus check
+```
+
+>>> is this section stale?
+Pages:
+- `/demo.html` — manual line-placement demo streamed from repeated `layoutNextLine()` calls
+- `/dynamic-layout.html` — fixed-height editorial spread with a continuous two-column flow, obstacle-aware title routing, and live logo-driven reflow
+- `/accuracy.html` — sweep across fonts, sizes, widths, i18n texts
+- `/benchmark.html` — performance comparison
+- `/bubbles.html` — bubble shrinkwrap demo
+- `/emoji-test.html` — canvas vs DOM emoji width sweep
+- `/corpus.html` — long-form corpora + diagnostics (`font=` / `lineHeight=` query params supported)
+
+## Research
+
+See [RESEARCH.md](RESEARCH.md) for the full exploration log: every approach we tried, benchmarks, the system-ui font discovery, punctuation accumulation error analysis, emoji width tables, HarfBuzz RTL bug, server-side engine comparison, and what Sebastian already knew.
+
+## Credits
+
+Sebastian Markbage's first gave the idea at [text-layout](https://github.com/chenglou/text-layout) last decade. Seb's design — canvas `measureText` for shaping, bidi algorithm from pdf.js, streaming line breaking — informed the architecture.
