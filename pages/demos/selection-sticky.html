@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Selection Sticky Repro</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --page: #f6f0e6;
+        --panel: #fffdf8;
+        --ink: #1d1915;
+        --muted: #6a6056;
+        --rule: #d7ccbf;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 32px 16px;
+        background: linear-gradient(180deg, #fbf7f0 0%, var(--page) 100%);
+        color: var(--ink);
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      }
+
+      main {
+        width: min(760px, 100%);
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid var(--rule);
+        border-radius: 18px;
+        background: var(--panel);
+        box-shadow: 0 18px 36px rgb(54 40 23 / 0.06);
+      }
+
+      h1 {
+        margin: 0;
+        font: 700 28px/1.08 Georgia, "Times New Roman", serif;
+      }
+
+      .meta {
+        margin: 14px 0 0;
+        color: var(--muted);
+        font: 13px/1.4 "SF Mono", ui-monospace, monospace;
+      }
+
+      .stage {
+        position: relative;
+        height: 120px;
+        margin-top: 18px;
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--panel) 78%, #f3ece2 22%);
+        overflow: hidden;
+      }
+
+      .line {
+        position: absolute;
+        left: 18px;
+        top: 28px;
+        white-space: pre;
+        color: var(--ink);
+        font: 400 22px/1.45 "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, serif;
+        user-select: text;
+        -webkit-user-select: text;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Sticky Selection Repro</h1>
+      <p id="counter" class="meta"></p>
+      <p class="meta">The line below is absolutely positioned. Its text is set once and never rewritten.</p>
+      <div class="stage">
+        <div id="line" class="line"></div>
+      </div>
+    </main>
+
+    <script type="module" src="./selection-sticky.ts"></script>
+  </body>
+</html>
